@@ -4,7 +4,7 @@
 
 ## 前置条件
 
-1. digest 已由 Agent 按「日报 / 周报 SOP」写入 `~/.qoder/dws-personal-context/digest/<key>.md`，覆盖口径与链接自检已完成。
+1. digest 已由 Agent 按「日报 / 周报 SOP」写入 `~/.qoder/dws-personal-context/digest/<key>.md`，覆盖口径与链接自检已完成；结构按[呈现契约](digest-sop.md#呈现契约)，完整 cite 行收在文末 `## 证据附录`。
 2. 用户明确表达了发布意图；只是问「能不能发」时先回答，不写。
 3. 发布前运行只读预检，退出码 0 才继续：
 
@@ -19,13 +19,14 @@ python3 ~/.qoder/skills/dws-personal-context/scripts/publish_digest.py check ~/.
 - 快照时间与对应 `raw/<起始日>/context.json` 的 mtime 对比（多日 digest 逐日对比）；raw 晚于快照 60 秒以上即 `stale_snapshot`，提示用户重跑 `context_index.py week --markdown` 或更新 digest，不静默发布。
 - 正文不含 `sk-`、`Bearer `、`password=`、`secret=`、`token=` 等凭证。
 - 链接不含 `…`、空格、`_dt_ac=`、`_dt_sig=`、`[REDACTED_CREDENTIAL]`，不以 `?`/`&` 结尾。
-- 发布视图无残留机器 ID（`chat:`/`msg:`/`mail:`/`minutes:`/`calendar:`）。
+- 发布视图无残留机器 ID（`chat:`/`msg:`/`mail:`/`minutes:`/`calendar:`）；`## 证据附录` 整节不进入发布视图，因此不参与该检查。
+- 缺 `## 证据附录` 只产生 `evidence_appendix_missing` 告警（退出码 0），用于提示旧格式 digest 未做引用分层，不阻断发布。
 
 输出 JSON 的 `problems[].code` 即失败原因；只报告行号，不回显凭证。预检不替代逐条 `cite` 核对，但替代人工字面扫描。
 
 ## 发布视图
 
-发布的不是 digest 原文，而是 `scripts/publish_view.py` 生成的发布视图：机器 ID 来源引用压缩成读者标签——`时间 | peer 名字 | chat:cid msg:msg` → `私聊·名字 MM-DD HH:MM`；裸 `chat:cid msg:msg`（表格/TODO 形态）按 digest 文件名对应的 `raw/<日>/context.index.json` 会话标题富化为 `私聊·人名`（`--root` 可覆盖；人名已在引用前缀时不重复；cid 尾部 `…` 截断按唯一前缀匹配；查不到回退 私聊）；裸 `mail:/minutes:/calendar:` → `邮件/听记/日程`，连续相同标签折叠为 `邮件×3`；digest 可读性格式 `渠道·名称（IDs）` 的 ID 括号被剥离。URL 与代码块/行内代码受到保护，不参与 ID 替换或残留检查。事实内容、URL、覆盖口径一律不动；本地 digest 保持 cite 原文照抄的完整取证版，不因发布改写。
+发布的不是 digest 原文，而是 `scripts/publish_view.py` 生成的发布视图：机器 ID 来源引用压缩成读者标签——`时间 | peer 名字 | chat:cid msg:msg` → `私聊·名字 MM-DD HH:MM`；裸 `chat:cid msg:msg`（表格/TODO 形态）按 digest 文件名对应的 `raw/<日>/context.index.json` 会话标题富化为 `私聊·人名`（`--root` 可覆盖；人名已在引用前缀时不重复；cid 尾部 `…` 截断按唯一前缀匹配；查不到回退 私聊）；裸 `mail:/minutes:/calendar:` → `邮件/听记/日程`，连续相同标签折叠为 `邮件×3`；digest 可读性格式 `渠道·名称（IDs）` 的 ID 括号被剥离。URL 与代码块/行内代码受到保护，不参与 ID 替换或残留检查。**`## 证据附录` 整节剔除**（本地取证层，写 digest 时必须放文末；标题出现在代码块/URL 内时不触发）。除该节外，事实内容、URL、覆盖口径一律不动；本地 digest 保持 cite 原文照抄的完整取证版，不因发布改写。
 
 `publish_digest.py` 在新建和更新内部调用发布视图，并对输出做残留机器 ID 硬门禁：非零退出即中止发布，不带着 ID 出门。凭证/链接扫描仍跑本地 digest——发布视图只删不改，本地文件是超集。转换契约由 `tests/test_publish_view.py` 守护。
 

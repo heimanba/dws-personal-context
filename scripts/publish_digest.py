@@ -121,6 +121,8 @@ def preflight(path, digest_root, raw_root, now=None):
 
     if not re.search(r'^##\s+覆盖口径\s*$', text, re.MULTILINE):
         problems.append({'code': 'coverage_section_missing'})
+    if not re.search(r'^##\s+证据附录\s*$', text, re.MULTILINE):
+        warnings.append('evidence_appendix_missing')
 
     source = DATA_SOURCE.search(text)
     start = end = None

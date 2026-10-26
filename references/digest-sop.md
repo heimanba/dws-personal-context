@@ -1,6 +1,59 @@
 # 日报 / 周报 SOP
 
-用于日报、周报、TODO 类提问。默认只写 `~/.qoder/dws-personal-context/digest/`；用户明确要求时再按 [publish-digest.md](publish-digest.md) 发布。
+用于日报、周报、TODO 类提问。**默认读者是用户本人**（复盘 + 可直接交给接手人看），不是审计员；默认只写 `~/.qoder/dws-personal-context/digest/`，用户明确要求时再按 [publish-digest.md](publish-digest.md) 发布。
+
+## 呈现契约
+
+日报不是采集回执。每条信息先过三问：**什么变了？明天依赖什么？什么正在变疼？**
+
+1. **输入不算产出**：收到的邮件、推送、OKR 周报、系统通知不单独成条；只有产生了动作、决策或状态变化才写。未处理的输入最多在「未动」里一句。
+2. **一事一块**：跨源合并同一事项；块内只写「之前 → 现在 / 影响 / 下一步」。按影响排序（不可逆、有截止、多人依赖优先），正文不超过 5 块，其余压成「其他」一行。
+3. **时间线不进正文**：默认不生成；用户明确要「过程复盘」时才作为附录，且不重复正文已写的事实。
+4. **三态标判断**：事实靠来源，不逐条挂【查到】；只有「是否真的执行/完成」这类判断才标【不确定】/【查不到】。
+5. **引用分层**：正文来源用可读标签（`私聊·张卫东 10:50`、`听记·接待官开团培训`、`邮件×3`）；cite 规范行与 msgId 收进文末 `## 证据附录`，发布视图整节剔除，正文因此可读。
+6. **敏感不进工作日报**：家庭事务、薪酬/离职待遇、健康等只留在会话回答，不写进 digest 正文或附录。
+7. **TODO 只收承诺**：有人要动手且有时点（或明确「未给」）的才进表；阅读、知会、订阅类不进。
+8. **不重复**：同一事实只在最合适的一节出现；「未动」里的风险不再在「推进」里复述。
+
+## 结构
+
+固定骨架，节顺序不可调：
+
+```markdown
+# 工作日报 · <起始日>（周报：<起始日>–<结束日>）
+
+> 读取时刻：...；数据快照：raw/<日>/context.json @ ...。
+> 默认读者：本人；【不确定】/【查不到】只标判断。
+
+**一句话**：<今天最重要的状态变化，一行；没有就写「无状态变化」>
+
+## 推进
+
+### <事项一>
+**变化**：<之前 → 现在>
+**下一步**：<谁 / 何时 / 做什么；没有就写「无」>
+来源：私聊·某某 10:50；听记·某会
+
+## 已定（明天依赖）
+
+- <决策/承诺/日程/审批结果>：<时点>，来源标签
+
+## 未动（风险）
+
+- <停滞事项>：<什么时候疼 / 卡在谁那里>
+
+## 覆盖口径
+
+<整段照抄 week --markdown 输出>
+
+## 证据附录
+
+- <事项一>：2026-10-15 10:50:19 | peer 某某 | chat:cid... msg:msg...
+```
+
+- 没有内容的节写「无」，不删节——缺节会让读者以为是漏写。
+- 周报把「推进」按主线归并，其余相同；逐日数字留在覆盖口径，不铺时间线。
+- `## 证据附录` 必须放文末；它是本地取证层，发布视图会整节剔除。
 
 ## 1. 采集
 
@@ -12,29 +65,30 @@
 
 ## 3. 读取与取证
 
-一律 `context_index.py read/search`；search 聊天命中自带 `cid+msgId+createTime+role`，可直接入引用。周报先用 `week --start <日> --end <日>` 拿逐日覆盖（status/sources）和会话矩阵（totalMessages/perDay），再按矩阵挑重点会话 `read` 原文。**跨天会话直接 `read --root ~/.qoder/dws-personal-context/raw --start <日> --end <日> --source chat --id <cid>` 合并读取**（msgId 去重、时间排序、perDay 账本），不逐日分别读再人工拼接。**引用即取证**：digest 里每条引用的日期/时间/msgId 用 `cite --message-id` 取规范行后照抄，不从中间笔记转写；引用长消息原文前先 cite 取完整未截断正文。
+一律 `context_index.py read/search`；search 聊天命中自带 `cid+msgId+createTime+role`，可直接入引用。周报先用 `week --start <日> --end <日>` 拿逐日覆盖（status/sources）和会话矩阵（totalMessages/perDay），再按矩阵挑重点会话 `read` 原文。**跨天会话直接 `read --root ~/.qoder/dws-personal-context/raw --start <日> --end <日> --source chat --id <cid>` 合并读取**（msgId 去重、时间排序、perDay 账本），不逐日分别读再人工拼接。**引用即取证**：证据附录里的日期/时间/msgId 用 `cite --message-id` 取规范行后照抄，不从中间笔记转写；引用长消息原文前先 cite 取完整未截断正文。
 
-**批量取证**（同一原始文件只解析一次，几十条引用不要逐条起进程）：`cite --index <当日索引> --source chat --id <cid> --all-messages` 一次取完该会话全部消息的规范引用行；重复 `--id` 取多条记录；`--all` 取该源全部条目。批量输出 `{requested,resolved,results[]}`，`results[i]` 与单条调用逐字段相同；单条选择仍返回原有形状（无 `results` 包裹）。解析不到的 ID 降级为该条 `{source,id,error}` 并让整体退出码变 1，不静默丢弃其余结果。`--root` 跨天合并模式只服务单会话，批量走 `--index`。禁止为「一次拿多条」手写 jq/python 解析脚本。
+**批量取证**（同一原始文件只解析一次，几十条引用不要逐条起进程）：`cite --index <当日索引> --source chat --id <cid> --all-messages` 一次取完该会话全部消息的规范引用行；重复 `--id` 取多条记录；`--all` 取该源全部条目。批量输出 `{requested,resolved,results[]}`，`results[i]` 与单条调用逐字段相同；单条选择仍返回原有形状（无 `results` 包裹）。解析不到的 ID 降级为该条 `{source,id,error}` 并让整体退出码变 1，不静默丢弃其余结果。`--root` 跨天合并模式只服务单会话，批量走 `--index`。禁止为「一次拿多条」手写 jq/python 解析脚本。注意 `cite --message-id` 一次只解析一个 ID，多条要逐个调用。
 
 ## 4. 覆盖口径
 
 结论必须附各源 complete/stopReason；approval 0 条、目录未证明、`snapshotRetained>0`（条目含历史保留行）都要按[当前操作限制](../SKILL.md#当前操作限制)解释，不得宣称全集。`week --markdown` 里的 `⚠窗口→` 行是跨天混算值，不是单日口径，照抄时标记和脚注不得删。
 
+覆盖口径节整段照抄 `week --markdown` 输出（单日也跑 `--start <日> --end <日>`），开头两行机器生成的「数据源 + 快照」指针不得手写或省略——快照时刻是 digest 对应 raw 版本的凭证，raw 后续被 update 改动即可据此判断 digest 数字是否过期。覆盖口径放在正文之后、证据附录之前，不占据开头。
+
 ## 5. 写 digest
 
-单日 `digest/<YYYY-MM-DD>.md`；多日 `digest/<起始>_<结束>.md`（如 `digest/2026-10-12_2026-10-16.md`），日期键与 `raw/<窗口起始日>` 同键。结构：结论 → 覆盖口径 → 时间线/按人事项 → TODO 表（带来源）→ 缺口。
-
-**覆盖口径节整段照抄 `week --markdown` 输出**（单日也跑 `--start <日> --end <日>`），开头两行机器生成的「数据源 + 快照」指针不得手写或省略——快照时刻是 digest 对应 raw 版本的凭证，raw 后续被 update 改动即可据此判断 digest 数字是否过期。**digest 正文（结论、归并、三态判断）由 Agent 写出，脚本不生成**；机械契约全部走脚本：写后跑 `publish_digest.py check <digest>` 校验结构/快照/链接/凭证，用户显式要求发布时用 `publish_digest.py create/update`，不手工串 `publish_view.py` 与 `doc` 命令。默认不回写钉钉。
-
-**链接保留**：来源消息含可点击链接（alidocs 文档/知识库、Aone 工单/CR、代码仓、发布页、数据平台）时，时间线条目与 TODO 表来源列须附 markdown 链接；URL 从 `cite` 全文照抄，不从 `preview` 取（preview 会截断 URL），不得改写或缩短；脱敏占位符参数（如 `_dt_ac=[REDACTED_CREDENTIAL]`）连同其配套签名参数（`_dt_sig` 等）整段剔除后再成链，不手工回填凭证；图片/头像/埋点类 URL 不收录。
-
-**来源引用可读性**：任何来源引用都带人类可读上下文，禁止裸 ID 串——成串同源引用写 `邮件×N（mail:…、…）`；听记/单一来源附名称 `听记·会议名（minutes:ID）`；表格内 chat 写 `私聊·人名 MM-DD HH:MM（chat:cid msg:msg）`；正文完整 cite 行（时间/人名/ID 齐全）保持原样。IDs 括号收尾供 cite 复核，发布视图（publish_view.py）自动剥离。
-
-**写后自检**：digest 中每条 markdown 链接的 URL 必须与 `cite` 原文逐字符一致（脱敏参数剔除者除外），不得含 `…`、空格或以 `?`/`&` 结尾。
+- 正文（一句话、推进、已定、未动）由 Agent 写出，脚本不生成；机械契约全部走脚本。
+- 链接保留：来源消息含可点击链接（alidocs 文档/知识库、Aone 工单/CR、代码仓、发布页、数据平台）时，「下一步」或「已定」条目附 markdown 链接；URL 从 `cite` 全文照抄，不从 `preview` 取（preview 会截断 URL），不得改写或缩短；脱敏占位符参数（如 `_dt_ac=[REDACTED_CREDENTIAL]`）连同其配套签名参数（`_dt_sig` 等）整段剔除后再成链，不手工回填凭证；图片/头像/埋点类 URL 不收录。
+- 来源可读性：正文来源禁止裸 ID 串——成串同源写 `邮件×N（mail:…、…）`；听记/单一来源附名称 `听记·会议名（minutes:ID）`；连续相同标签折叠为 `邮件×3`。完整 cite 行只进证据附录。
+- 证据附录每条一行：`- <事项>：<cite 规范行>`；同一事项多条引用可续行，不合并成裸 ID 串。
+- 写后跑 `python3 ~/.qoder/skills/dws-personal-context/scripts/publish_digest.py check <digest>` 校验结构/快照/链接/凭证；用户显式要求发布时用 `publish_digest.py create/update`，不手工串 `publish_view.py` 与 `doc` 命令。默认不回写钉钉。
+- **写后自检**：digest 中每条 markdown 链接的 URL 必须与 `cite` 原文逐字符一致（脱敏参数剔除者除外），不得含 `…`、空格或以 `?`/`&` 结尾。
 
 ## TODO 表
 
-列为：事项 / 来源（`私聊·人名 时间（chat:cid msg:msg）`、`听记·标题（minutes:ID）`、`邮件×N（mail:…）`，或 taskId、eventId、messageId；来源含链接时附从 `cite` 全文照抄的 markdown 链接）/ 责任人 / 截止 / 状态。每条 TODO 都是派生判断，必须带来源并沿用三态标注；未见后续不等于未完成，收到/好不等于完成。
+列为：事项 / 来源（`私聊·人名 时间（chat:cid msg:msg）`、`听记·标题（minutes:ID）`、`邮件×N（mail:…）`，或 taskId、eventId、messageId；来源含链接时附从 `cite` 全文照抄的 markdown 链接）/ 责任人 / 截止 / 状态。
+
+准入：只收「有人要动手」且有承诺时点的项；「抽阅 OKR」「留意某文」这类不进表，放「未动」一句或不写。每条 TODO 都是派生判断，必须带来源并沿用三态标注；未见后续不等于未完成，收到/好不等于完成。
 
 ## 交付物路径
 

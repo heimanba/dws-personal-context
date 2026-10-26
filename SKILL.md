@@ -29,7 +29,7 @@ Pull-only 个人上下文问答：用户提问 → 只读采集 → 归并关联
 |---|---|
 | 私聊窗口采集 / 增量 / 合并 | `scripts/export-dialogues.sh`（协议见 [dialogues-protocol.md](references/dialogues-protocol.md)） |
 | 日历、待办、审批、听记、邮件、文档、人名解析 | `scripts/collect-context.sh`；命令与范围见 [sources.md](references/sources.md) |
-| 日报 / 周报 / TODO | 采集同上，取证与交付见 [digest-sop.md](references/digest-sop.md) |
+| 日报 / 周报 / TODO | 采集同上，呈现契约、结构与交付见 [digest-sop.md](references/digest-sop.md) |
 
 写回是输出通道，不是数据源。各源分别记录查询范围和完整性，不能把最近列表或状态快照当成全部历史。
 
@@ -65,7 +65,7 @@ Pull-only 个人上下文问答：用户提问 → 只读采集 → 归并关联
 - 每条事实附来源（谁 / 会话 / 时间）；无来源不写；来源含文档、Aone 工单/CR、代码仓、发布页等链接时，附从 `cite` 全文照抄的可点击 URL。
 - 三态标注：【查到】【查不到】【不确定】；「查不到」必须先扩大时间窗再下结论，禁止拿单次窗口做全历史否定。
 - 人名用姓名 + 固定 userId；附读取时刻与覆盖口径（源、时间窗、complete）。
-- 日报 / TODO 类提问：会话内回答之外，把交付物写入 `~/.qoder/dws-personal-context/digest/`，结构、TODO 表和链接规则见 [digest-sop.md](references/digest-sop.md)；默认不写回钉钉。
+- 日报 / 周报 / TODO：默认读者是用户本人，按[呈现契约](references/digest-sop.md#呈现契约)写「一句话 / 推进 / 已定 / 未动 / 覆盖口径」，不写采集回执，时间线默认不生成；家庭、薪酬等敏感内容不进正文；完整 cite 行收进 `## 证据附录`（发布视图剔除）。交付物写入 `~/.qoder/dws-personal-context/digest/`，默认不写回钉钉。
 
 ## 当前操作限制
 
@@ -91,7 +91,7 @@ Pull-only 个人上下文问答：用户提问 → 只读采集 → 归并关联
 | 文件 | 内容 |
 |---|---|
 | [sources.md](references/sources.md) | 各数据源命令、采集入口与范围 |
-| [digest-sop.md](references/digest-sop.md) | 日报/周报采集、取证、覆盖口径与交付 |
+| [digest-sop.md](references/digest-sop.md) | 呈现契约、日报/周报结构、取证与交付 |
 | [publish-digest.md](references/publish-digest.md) | 写回钉钉文档完整 SOP |
 | [dialogues-protocol.md](references/dialogues-protocol.md) | 单聊采集协议、格式、重试、脱敏 |
 | [verification-log.md](references/verification-log.md) | 按日期归档的上游核实记录 |

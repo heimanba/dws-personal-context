@@ -11,6 +11,7 @@
 - 裸 `mail:x` / `minutes:x` / `calendar:x` → 邮件 / 听记 / 日程
 - digest 可读性格式 `渠道·名称（IDs）` → 剥离 ID 括号，保留标签
 - 同一来源多个 msg（`chat:cid msg:a / msg:b`）折叠；连续相同标签折叠为 `标签×N`
+- `## 证据附录` 整节不发布：它是本地取证层，发布视图从该标题删到下个一级/二级标题或文末
 
 转换后仍残留已知形态机器 ID 时以非零码退出（发布前硬门禁），宁可不发布也不带 ID 出门。
 """
@@ -43,6 +44,34 @@ PAREN = re.compile(r'[（(]([^（）()]*)[）)]')
 ID_ONLY = re.compile(r'^(?:(?:chat|msg|mail|minutes|calendar):[A-Za-z0-9+/=.\-…]+[\s;；、]*)+$')
 
 RESIDUAL = re.compile(r'\b(?:chat|msg|mail|minutes|calendar):[A-Za-z0-9+/=-]')
+
+APPENDIX_HEADING = re.compile(r'^##[ \t]+证据附录[ \t]*$', re.MULTILINE)
+NEXT_SECTION = re.compile(r'^#{1,2}[ \t]+\S', re.MULTILINE)
+
+
+def strip_appendix(text):
+    """Drop the local evidence appendix; it is never part of the published view.
+
+    Headings inside code, URLs or inline code stay untouched.
+    """
+    segments = list(_segments(text))
+    heading_at = heading_end = None
+    for protected, part, start, _ in segments:
+        if protected:
+            continue
+        match = APPENDIX_HEADING.search(part)
+        if match:
+            heading_at, heading_end = start + match.start(), start + match.end()
+            break
+    if heading_at is None:
+        return text
+    for protected, part, start, end in segments:
+        if end <= heading_end or protected:
+            continue
+        match = NEXT_SECTION.search(part, max(heading_end - start, 0))
+        if match:
+            return text[:heading_at] + text[start + match.start():]
+    return text[:heading_at]
 
 
 def _full_chat_sub(match):
@@ -161,19 +190,19 @@ def _list_continuation(text, position, part):
 def _segments(text):
     start = 0
     for match in PROTECTED.finditer(text):
-        yield False, text[start:match.start()]
+        yield False, text[start:match.start()], start, match.start()
         part = match.group(0)
         continuation = (match.group('indented') is not None
                         and _list_continuation(text, match.start(), part))
-        yield not continuation, part
+        yield not continuation, part, match.start(), match.end()
         start = match.end()
-    yield False, text[start:]
+    yield False, text[start:], start, len(text)
 
 
 def citation_text(text):
     """Text scanned by the residual-ID gate; URLs and code are not citations."""
     return ''.join(re.sub(r'[^\n]', ' ', part) if protected else part
-                   for protected, part in _segments(text))
+                   for protected, part, _, _ in _segments(text))
 
 
 def _transform_citations(text, titles=None):
@@ -187,8 +216,9 @@ def _transform_citations(text, titles=None):
 
 
 def transform(text, titles=None):
+    text = strip_appendix(text)
     return ''.join(part if protected else _transform_citations(part, titles)
-                   for protected, part in _segments(text))
+                   for protected, part, _, _ in _segments(text))
 
 
 def find_residual(text):

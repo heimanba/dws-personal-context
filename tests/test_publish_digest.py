@@ -197,6 +197,11 @@ class PublishDigestTests(unittest.TestCase):
         self.assertFalse(any('+create' in call['args'] for call in self.calls()))
         self.assertEqual({p.name for p in (home / '.qoder').iterdir()}, {'dws-personal-context'})
 
+    def test_check_warns_when_evidence_appendix_missing(self):
+        code, result = self.invoke('check', str(self.digest))
+        self.assertEqual(code, 0, result)
+        self.assertIn('evidence_appendix_missing', result['warnings'])
+
     def test_check_rejects_stale_raw(self):
         raw = self.raw_day / 'context.json'
         later = (SNAPSHOT.timestamp() + 120)

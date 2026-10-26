@@ -167,6 +167,28 @@ class PublishViewTests(unittest.TestCase):
         out = self.run_view('同事丙 私聊(10-10 16:57)（首次失败）')
         self.assertIn('同事丙 私聊(10-10 16:57)（首次失败）', out)
 
+    def test_evidence_appendix_is_dropped_from_view(self):
+        text = ('## 推进\n\n- 事项已跟进。（来源：2026-10-15 10:52:55 | peer 同事甲 | '
+                'chat:cidSyntheticPeerA= msg:msgSynthetic001+/==）\n\n'
+                '## 证据附录\n\n- 事项：2026-10-15 10:52:55 | peer 同事甲 | '
+                'chat:cidSyntheticPeerA= msg:msgSynthetic001+/==\n')
+        out = self.run_view(text)
+        self.assertNotIn('证据附录', out)
+        self.assertNotIn('chat:cidSyntheticPeerA=', out)
+        self.assertIn('私聊·同事甲 10-15 10:52', out)
+
+    def test_appendix_stops_at_next_section(self):
+        text = ('## 证据附录\n\n- 事项：chat:cidSyntheticPeerA= msg:msgSynthetic001+/==\n\n'
+                '## 覆盖口径\n\n数据源：raw/2026-10-15（1 天，缺失 0，不可读 0）\n')
+        out = self.run_view(text)
+        self.assertNotIn('证据附录', out)
+        self.assertNotIn('chat:cidSyntheticPeerA=', out)
+        self.assertIn('数据源：raw/2026-10-15', out)
+
+    def test_appendix_heading_inside_code_is_not_stripped(self):
+        text = ('```markdown\n## 证据附录\nchat:cidSyntheticPeerA= msg:msgSynthetic001+/==\n```\n')
+        self.assertEqual(self.run_view(text), text)
+
 
 if __name__ == '__main__':
     unittest.main()
