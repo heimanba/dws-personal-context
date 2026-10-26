@@ -40,7 +40,7 @@ def acquire_window_lock(target):
         fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:
         handle.close()
-        raise ValueError('another ctxring collection holds ' + str(lock_path) +
+        raise ValueError('another dws-personal-context collection holds ' + str(lock_path) +
                          '; wait for it to finish instead of running a second collection')
     return handle
 

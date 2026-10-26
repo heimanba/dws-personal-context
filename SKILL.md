@@ -53,8 +53,8 @@ Pull-only 个人上下文问答：用户提问 → 只读采集 → 归并关联
 
 1. **目标**：给了文档 URL/nodeId → 更新；只给标题 → 精确搜索，唯一同名 adoc 才提议更新；都没给 → 新建，标题取 digest 首个 H1（无则 `工作日报 · <日期>`），放入「我的文档」根目录的固定文件夹 `日报`（存在复用，不存在创建；用户点名其他文件夹时以用户为准）。文件夹/知识库 ID 只来自真实返回，不猜。
 2. **发布前自检**：`python3 ~/.qoder/skills/dws-personal-context/scripts/publish_digest.py check <digest>`（只读；覆盖口径/快照指针、raw mtime 过期、凭证、链接、发布视图残留 ID 全部机器校验，非零即停）。
-3. **新建**：`python3 ~/.qoder/skills/dws-personal-context/scripts/publish_digest.py create <digest>` 一条命令完成同名 ctxring 副本检查 → 固定文件夹解析（默认 `日报`，存在复用/不存在创建）→ 发布视图 + footer → `doc +create` → 回读验证；`--folder` 传用户给定 ID，`--dry-run` 只出计划。必须拿到 `verified=true` 或回读命中；失败不回落到根目录。
-4. **更新**：`python3 ~/.qoder/skills/dws-personal-context/scripts/publish_digest.py update <digest> --node <ID|URL> --mode append --yes`（`--yes` 仅在用户确认目标后加；内容同样走发布视图）；`overwrite` 仅限用户明确说「覆盖/替换」且目标是含 ctxring footer 的发布副本，由脚本硬门禁。`partial_success`/`status=unknown` 先回读，禁止重试创建。
+3. **新建**：`python3 ~/.qoder/skills/dws-personal-context/scripts/publish_digest.py create <digest>` 一条命令完成同名已发布副本检查 → 固定文件夹解析（默认 `日报`，存在复用/不存在创建）→ 发布视图 + footer → `doc +create` → 回读验证；`--folder` 传用户给定 ID，`--dry-run` 只出计划。必须拿到 `verified=true` 或回读命中；失败不回落到根目录。
+4. **更新**：`python3 ~/.qoder/skills/dws-personal-context/scripts/publish_digest.py update <digest> --node <ID|URL> --mode append --yes`（`--yes` 仅在用户确认目标后加；内容同样走发布视图）；`overwrite` 仅限用户明确说「覆盖/替换」且目标是含发布 footer 的发布副本，由脚本硬门禁。`partial_success`/`status=unknown` 先回读，禁止重试创建。
 5. **禁止**：发送消息、建待办/日程/审批、授权/分享/评论/删除；不把发布链接发到任何群或人。
 
 完整命令、目标消歧、失败语义见[写回钉钉文档](references/publish-digest.md)。

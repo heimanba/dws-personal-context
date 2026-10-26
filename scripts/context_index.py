@@ -12,6 +12,10 @@ from chats import DATA_ROOT
 from sources.common import CONTEXT_SOURCES
 from redact import redact_text
 
+INDEX_FORMAT = 'dws-personal-context-index'
+# Read-only compatibility for indexes written before the skill rename.
+LEGACY_INDEX_FORMAT = 'ctxring-context-index'
+
 
 def index_path(raw_path):
     return Path(raw_path).with_suffix('.index.json')
@@ -54,7 +58,7 @@ def coverage_summary(coverage):
 def build_index(data, raw_path, digest):
     if data.get('meta', {}).get('schemaVersion') != 3 or not isinstance(data.get('sources'), dict):
         raise ValueError('requires a schemaVersion=3 context file')
-    result = dict(meta=dict(format='ctxring-context-index', schemaVersion=1,
+    result = dict(meta=dict(format=INDEX_FORMAT, schemaVersion=1,
                            rawFile=Path(raw_path).name, rawSha256=digest,
                            **pick(data['meta'], ('identity', 'timezone', 'window', 'generatedAt',
                                                 'requestedSources', 'refreshedSources',
@@ -139,8 +143,9 @@ def load_indexed_raw(index):
     index = Path(index).resolve()
     manifest = json.loads(index.read_bytes())
     meta = manifest.get('meta', {})
-    if meta.get('format') != 'ctxring-context-index' or meta.get('schemaVersion') != 1:
-        raise ValueError('requires a ctxring-context-index file')
+    if (meta.get('format') not in (INDEX_FORMAT, LEGACY_INDEX_FORMAT)
+            or meta.get('schemaVersion') != 1):
+        raise ValueError('requires a context index file')
     raw_path = index.parent / meta['rawFile']
     payload = raw_path.read_bytes()
     if hashlib.sha256(payload).hexdigest() != meta['rawSha256']:
@@ -620,7 +625,7 @@ def main():
                       results=results))
             return 0 if resolved_all else 1
     except (ValueError, KeyError, TypeError, OSError) as exc:
-        print('[ctxring] failed: %s' % exc, file=sys.stderr)
+        print('[dws-personal-context] failed: %s' % exc, file=sys.stderr)
         return 1
     return 0
 

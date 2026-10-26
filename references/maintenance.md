@@ -38,7 +38,7 @@
 
 ## 写回钉钉文档契约（2026-10-21 新增）
 
-唯一写出口：用户显式要求时，发布 `digest/*.md`；原始 `raw/`、聊天原文和任意本地文件不发布。发布内容为 `scripts/publish_view.py` 生成的发布视图（机器 ID 来源引用压缩、裸 `chat:cid` 按 raw 索引富化为 `私聊·人名`，残留 ID 非零退出，`tests/test_publish_view.py` 守护）；本地 digest 不因发布改写。新建一律进「我的文档」根目录的固定文件夹：`scripts/ensure_publish_folder.py` 用 `wiki space list --type myWikiSpace` 定位个人空间，分页读 `wiki node list` 根节点，按 `nodeType=folder` + 名称完全一致解析；唯一命中复用、零命中用 `wiki node create --type folder` 创建、多个命中或分页不完整即停且不回落到根目录（默认 `日报`，`tests/test_ensure_publish_folder.py` 守护）。刻意不用 `drive +create-folder`：它建在钉盘个人空间，会落到「我的文件（来自钉盘）」挂载点下而不是「我的文档」根。用户给定文件夹 ID 时直接使用。新建用 `dws doc +create --folder`（`confirmation=not_required`）；更新用 `+checkpoint-update`（`confirmation=user_required`，默认 append），不改文档位置；overwrite 仅限用户明确要求且目标为 ctxring 发布副本。发布前校验 digest 的覆盖口径/快照指针与链接/凭证；raw mtime 晚于快照时提示过期。以上预检、文件夹解析、发布视图、建/更与回读统一由 `scripts/publish_digest.py` 编排（`check` 只读；`create`/`update` 为写操作，`update` 必须显式 `--yes`；overwrite 仅限含 footer 的发布副本），不靠 Agent 手工串 `publish_view.py`/`ensure_publish_folder.py`/`dws doc` 命令；`tests/test_publish_digest.py` 守护。不发送消息、不建待办/日程/审批、不授权/分享/评论/删除。完整 SOP 见[publish-digest.md](publish-digest.md)。本机 dws 1.0.62 的 `+create --dry-run`/Schema 与 `wiki space list --type myWikiSpace`/`wiki node list`/`wiki node create --type folder` 已核实；本文件仍按 1.0.63 pin 维护。
+唯一写出口：用户显式要求时，发布 `digest/*.md`；原始 `raw/`、聊天原文和任意本地文件不发布。发布内容为 `scripts/publish_view.py` 生成的发布视图（机器 ID 来源引用压缩、裸 `chat:cid` 按 raw 索引富化为 `私聊·人名`，残留 ID 非零退出，`tests/test_publish_view.py` 守护）；本地 digest 不因发布改写。新建一律进「我的文档」根目录的固定文件夹：`scripts/ensure_publish_folder.py` 用 `wiki space list --type myWikiSpace` 定位个人空间，分页读 `wiki node list` 根节点，按 `nodeType=folder` + 名称完全一致解析；唯一命中复用、零命中用 `wiki node create --type folder` 创建、多个命中或分页不完整即停且不回落到根目录（默认 `日报`，`tests/test_ensure_publish_folder.py` 守护）。刻意不用 `drive +create-folder`：它建在钉盘个人空间，会落到「我的文件（来自钉盘）」挂载点下而不是「我的文档」根。用户给定文件夹 ID 时直接使用。新建用 `dws doc +create --folder`（`confirmation=not_required`）；更新用 `+checkpoint-update`（`confirmation=user_required`，默认 append），不改文档位置；overwrite 仅限用户明确要求且目标为已发布副本。发布前校验 digest 的覆盖口径/快照指针与链接/凭证；raw mtime 晚于快照时提示过期。以上预检、文件夹解析、发布视图、建/更与回读统一由 `scripts/publish_digest.py` 编排（`check` 只读；`create`/`update` 为写操作，`update` 必须显式 `--yes`；overwrite 仅限含 footer 的发布副本），不靠 Agent 手工串 `publish_view.py`/`ensure_publish_folder.py`/`dws doc` 命令；`tests/test_publish_digest.py` 守护。不发送消息、不建待办/日程/审批、不授权/分享/评论/删除。完整 SOP 见[publish-digest.md](publish-digest.md)。本机 dws 1.0.62 的 `+create --dry-run`/Schema 与 `wiki space list --type myWikiSpace`/`wiki node list`/`wiki node create --type folder` 已核实；本文件仍按 1.0.63 pin 维护。
 
 ## 取证与采集性能契约（2026-10-21 新增）
 
@@ -57,7 +57,7 @@
 
 ## 安装名称与数据格式
 
-技能名与目录为 `dws-personal-context`，中文标题为“钉钉个人上下文与日报”。规范安装目录是 `~/.qoder/skills/dws-personal-context/`。数据固定存储在 `~/.qoder/dws-personal-context/`，不枚举或回退到其他目录。单聊协议固定为 `ctxring-dialogues` schemaVersion=2，多源协议固定为 schemaVersion=3，索引固定为 `ctxring-context-index` schemaVersion=1，发布标记固定为 `由 ctxring 发布`。这些都是各自唯一的正式契约，不提供格式升级、标记别名、旧路径或导入回退。
+技能名与目录为 `dws-personal-context`，中文标题为“钉钉个人上下文与日报”。规范安装目录是 `~/.qoder/skills/dws-personal-context/`。数据固定存储在 `~/.qoder/dws-personal-context/`，不枚举或回退到其他目录。单聊协议固定为 `dws-personal-context-dialogues` schemaVersion=2，多源协议固定为 schemaVersion=3，索引固定为 `dws-personal-context-index` schemaVersion=1，发布副本以 `完整取证见本地 digest` 识别、可见文案为 `由 dws-personal-context 发布`。这些都是各自唯一的正式契约，不提供格式升级、标记别名、旧路径或导入回退；仅对改名前写入的单聊与索引文件保留只读兼容（兼容常量见 `chats.py` / `context_index.py`），再次写出一律用新标识。
 
 ## 分发检查
 

@@ -27,6 +27,9 @@ def ms_since(start):
     return int((time.monotonic() - start) * 1000)
 
 DAY_KEY = re.compile(r'\d{4}-\d{2}-\d{2}')
+DIALOGUES_FORMAT = 'dws-personal-context-dialogues'
+# Read-only compatibility for files written before the skill rename.
+LEGACY_DIALOGUES_FORMAT = 'ctxring-dialogues'
 
 def default_out(name, day=None, timezone='Asia/Shanghai'):
     """~/.qoder/dws-personal-context/raw/<day>/<name>; ignores QODER_CONFIG_DIR so a dev override cannot split reads and writes."""
@@ -44,8 +47,9 @@ def load(path):
 def decode_dataset(data):
     """Load the public Agent format into the collector's in-memory representation."""
     meta = data.get('meta', {})
-    if meta.get('format') != 'ctxring-dialogues' or meta.get('schemaVersion') != 2:
-        raise ValueError('unsupported dialogue format; requires ctxring-dialogues schemaVersion=2')
+    if (meta.get('format') not in (DIALOGUES_FORMAT, LEGACY_DIALOGUES_FORMAT)
+            or meta.get('schemaVersion') != 2):
+        raise ValueError('unsupported dialogue format; requires schemaVersion=2')
     state = meta.get('state')
     if (not isinstance(state, dict) or not isinstance(state.get('self'), dict) or not state['self']
             or not isinstance(state.get('reads'), list)
@@ -168,7 +172,7 @@ def call(args, key, retries, recover_shape=False, timeout=60):
                           recoverable_message_shape(args, key, data, error))
         if shape_recovery and not terminal:
             retryable = True
-            history[-1]['recovery'] = {'policy': 'ctxring_missing_collection_read_retry',
+            history[-1]['recovery'] = {'policy': 'missing_collection_read_retry',
                                        'retryScheduled': attempt + 1 < retries}
         # Repeating a terminal directory page cannot invent a missing continuation.
         stalled_directory = (key == 'chats' and usable and stop == 'pagination_error'
@@ -178,7 +182,7 @@ def call(args, key, retries, recover_shape=False, timeout=60):
             history[-1]['retrySuppressed'] = 'missing_directory_continuation'
         if latest.get('complete') is True or terminal or not retryable or stalled_directory or attempt + 1 >= retries:
             break
-        print('[ctxring] retry attempt=%d stop=%s' % (attempt + 1, stop), file=sys.stderr)
+        print('[dws-personal-context] retry attempt=%d stop=%s' % (attempt + 1, stop), file=sys.stderr)
         delay = error.get('retry_after_seconds', 1)
         try:
             delay = float(delay)
@@ -588,7 +592,7 @@ def main():
             a.mode, a.base = 'update', a.out
         else:
             a.mode = 'collect'
-        print('[ctxring] mode=%s out=%s' % (a.mode, a.out), file=sys.stderr)
+        print('[dws-personal-context] mode=%s out=%s' % (a.mode, a.out), file=sys.stderr)
     if a.mode == 'merge':
         if not a.files:
             p.error('merge requires input files')
@@ -751,7 +755,7 @@ def main():
                     conversations=[targets[key] for key in pending])])
                 save_dialogues(checkpoint, identity, a)
                 checkpointed += ms_since(started)
-                print('[ctxring] read messages=%d complete=%s' % (len(c['msgs']), state.get('complete') is True), file=sys.stderr)
+                print('[dws-personal-context] read messages=%d complete=%s' % (len(c['msgs']), state.get('complete') is True), file=sys.stderr)
         # fetchMs is the serial-equivalent request cost; readPhaseMs is the wall clock paid,
         # so fetchMs/readPhaseMs measures the overlap actually achieved.
         timings.update(readPhaseMs=ms_since(phase), networkWaitMs=waited, checkpointMs=checkpointed,
@@ -759,7 +763,7 @@ def main():
         data = collection_dataset(base, fetched, reads, discovery, window_start, output_end, a)
         data['meta']['timings'] = timings
     save_dialogues(data, identity, a)
-    print('[ctxring] complete=%s conversations=%d messages=%d out=%s' %
+    print('[dws-personal-context] complete=%s conversations=%d messages=%d out=%s' %
           (data['meta']['complete'], data['meta']['conversations'], data['meta']['messages'], a.out))
     return 0 if data['meta']['complete'] else 2
 
@@ -767,5 +771,5 @@ if __name__ == '__main__':
     try:
         sys.exit(main())
     except (OSError, ValueError, KeyError, TypeError, subprocess.TimeoutExpired) as exc:
-        print('[ctxring] failed: %s' % exc, file=sys.stderr)
+        print('[dws-personal-context] failed: %s' % exc, file=sys.stderr)
         sys.exit(1)

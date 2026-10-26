@@ -26,7 +26,7 @@ def write_dialogue_fixture(path, state):
                  'messages': c.get('msgs', [])} for c in rows if c.get('msgs')]
     empty = [{'cid': c['cid'], 'title': c.get('title', '测试同事'), 'kind': 'private_chat'}
              for c in rows if not c.get('msgs')]
-    public = {'meta': {'format': 'ctxring-dialogues', 'schemaVersion': 2,
+    public = {'meta': {'format': 'dws-personal-context-dialogues', 'schemaVersion': 2,
                       'window': meta['window'], 'coverage': meta,
                       'stats': {'messages': sum(len(c['messages']) for c in messages)},
                       'state': {'self': meta['self'], 'reads': meta.get('reads', []),
@@ -50,7 +50,7 @@ class CollectionRegressionTests(unittest.TestCase):
                                env=dict(os.environ, DWS_BIN=str(cli)), capture_output=True, text=True)
             self.assertEqual(p.returncode, 2, p.stderr)
             public = json.loads(out.read_text())
-            self.assertEqual(public['meta']['format'], 'ctxring-dialogues')
+            self.assertEqual(public['meta']['format'], 'dws-personal-context-dialogues')
             data = chats.decode_dataset(public)
             self.assertFalse(data['meta']['knownConversationsComplete'])
             self.assertEqual(data['meta']['stopReason'], 'no_private_conversations_discovered')
@@ -82,7 +82,7 @@ class CollectionRegressionTests(unittest.TestCase):
                                    '--out', str(out)], env=dict(os.environ, DWS_BIN=str(cli)), capture_output=True, text=True)
             self.assertEqual(proc.returncode, 2, proc.stderr)
             public = json.loads(out.read_text())
-            self.assertEqual(public['meta']['format'], 'ctxring-dialogues')
+            self.assertEqual(public['meta']['format'], 'dws-personal-context-dialogues')
             data = chats.decode_dataset(public)
             self.assertTrue(data['meta']['knownConversationsComplete'])
             self.assertEqual(data['meta']['messages'], 2)
@@ -263,7 +263,7 @@ print(json.dumps(result))
                                   env=dict(os.environ, DWS_BIN=str(cli)), capture_output=True, text=True)
             self.assertEqual(proc.returncode, 2, proc.stderr)
             public = json.loads(out.read_text())
-            self.assertEqual(public['meta']['format'], 'ctxring-dialogues')
+            self.assertEqual(public['meta']['format'], 'dws-personal-context-dialogues')
             data = chats.decode_dataset(public)
             self.assertEqual({c['cid'] for c in data['conversations']},
                              {'primary', 'category', 'top1', 'top2'})
@@ -304,7 +304,7 @@ print(json.dumps(result))
                 '--out', str(out)], env=dict(os.environ, DWS_BIN=str(cli)), capture_output=True, text=True)
             self.assertEqual(proc.returncode, 2, proc.stderr)
             public = json.loads(out.read_text())
-            self.assertEqual(public['meta']['format'], 'ctxring-dialogues')
+            self.assertEqual(public['meta']['format'], 'dws-personal-context-dialogues')
             data = chats.decode_dataset(public)
             self.assertEqual([m['msgId'] for m in data['conversations'][0]['msgs']], ['new'])
             self.assertEqual(public['meta']['coverage']['knownConversations'], 1)
@@ -483,7 +483,7 @@ class RerunAndConcurrencyTests(unittest.TestCase):
             fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
             handle.close()
         self.assertEqual(proc.returncode, 1)
-        self.assertIn('another ctxring collection holds', proc.stderr)
+        self.assertIn('another dws-personal-context collection holds', proc.stderr)
         self.assertFalse(out.exists())
 
 

@@ -17,7 +17,7 @@ bash scripts/export-dialogues.sh update --base ~/.qoder/dws-personal-context/raw
 bash scripts/export-dialogues.sh merge ~/.qoder/dws-personal-context/raw/2026-10-13/dialogues.json ~/.qoder/dws-personal-context/raw/2026-10-14/dialogues.json
 ```
 
-- 格式为 `{meta,conversations}`，`meta.format=ctxring-dialogues`、schemaVersion=2。会话为 `{cid,title,kind,direction,messages}`；消息为 `{msgId,createTime,role,sender,senderId,text,contentFlags?}`。仅省略正文区域的空会话，所有消息按时间和 msgId 排序。senderId 保留用于续读时准确核验角色，引用使用父级 cid + msgId；时间和姓名用于展示。输出权限 600，原子写入。
+- 格式为 `{meta,conversations}`，`meta.format=dws-personal-context-dialogues`、schemaVersion=2。会话为 `{cid,title,kind,direction,messages}`；消息为 `{msgId,createTime,role,sender,senderId,text,contentFlags?}`。仅省略正文区域的空会话，所有消息按时间和 msgId 排序。senderId 保留用于续读时准确核验角色，引用使用父级 cid + msgId；时间和姓名用于展示。输出权限 600，原子写入。
 - `meta.state` 是必要续读状态：本人身份映射 self、空会话清单 emptyConversations、逐会话读取范围与完成状态 reads。非空会话不重复保存标题和正文；state 不包含未脱敏正文。Agent 汇总读取 conversations 与 meta.coverage，state 仅供脚本继续更新。正式格式可直接作为 update、merge、--known-chats 输入，不依赖旁路原始文件。
 - 只接受上述正式单聊格式及完整续读状态；不提供其他文件格式的导入或转换入口。采集/更新/合并返回 0=覆盖完整、2=部分结果已写出、1=执行失败；目前目录全集未获证明，通常返回 2。
 - `meta.window` 保存 `[start,end)` 与时区，默认 Asia/Shanghai。--timezone 声明输入无时区时间戳的时区，不转换时间。collect 默认今天起至现在；update 默认基线 window.end 至现在。失败会话从原 start 重读，新增会话从基线窗口起点补读，不能只推进全局结束时间而跳过失败范围。--only-failed 使用失败状态的原 start/end，保留成功会话和全局窗口。

@@ -121,7 +121,7 @@ agent\_infra 已完成 12 项。[详情](https://example.com/a_b?x=1)
 代码：`a  b`。
 
 ---
-> 由 ctxring 发布 · 来源引用已压缩为发布视图，完整取证见本地 digest：digest/2026-10-15.md · 发布：2026-10-21 20:39   
+> 由 dws-personal-context 发布 · 来源引用已压缩为发布视图，完整取证见本地 digest：digest/2026-10-15.md · 发布：2026-10-21 20:39   
 """
 
 
@@ -251,7 +251,7 @@ class PublishDigestTests(unittest.TestCase):
         create = [call for call in self.calls() if '+create' in call['args']][0]
         self.assertIn('--folder', create['args'])
         self.assertIn('FOLDER1', create['args'])
-        self.assertIn('> 由 ctxring 发布', create['stdin'])
+        self.assertIn('> 由 dws-personal-context 发布', create['stdin'])
         self.assertNotIn('chat:', create['stdin'])
 
     def test_create_readback_failure_is_partial(self):
@@ -269,7 +269,7 @@ class PublishDigestTests(unittest.TestCase):
         self.assertEqual(result['nodeId'], 'NEW1')
         self.assertEqual(result['problems'][0]['code'], 'readback_incomplete')
 
-    def test_create_blocks_existing_ctxring_document(self):
+    def test_create_blocks_existing_published_document(self):
         search = {'complete': True, 'documents': [
             {'docType': 'adoc', 'name': '工作日报 · 2026-10-15',
              'nodeId': 'OLD1', 'url': 'https://alidocs.example/nodes/OLD1'}]}
@@ -500,12 +500,12 @@ class PublishDigestTests(unittest.TestCase):
         self.assertEqual(result['problems'][0]['code'], 'confirmation_required')
         self.assertEqual(self.calls(), [])
 
-    def test_overwrite_requires_ctxring_copy(self):
+    def test_overwrite_requires_published_copy(self):
         code, result = self.invoke(
             'update', str(self.digest), '--node', 'DOC1',
             '--mode', 'overwrite', '--yes')
         self.assertEqual(code, 1)
-        self.assertEqual(result['problems'][0]['code'], 'overwrite_requires_ctxring_copy')
+        self.assertEqual(result['problems'][0]['code'], 'overwrite_requires_published_copy')
         self.assertFalse([call for call in self.calls() if '+checkpoint-update' in call['args']])
 
     def test_update_verifies_by_readback(self):

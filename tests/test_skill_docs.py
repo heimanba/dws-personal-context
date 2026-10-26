@@ -74,7 +74,7 @@ class SkillDocsTest(unittest.TestCase):
         docs = [SKILL, *sorted(REFERENCES.glob("*.md"))]
         for doc in docs:
             text = doc.read_text(encoding="utf-8")
-            self.assertNotIn("skills/" + "ctxring", text, f"{doc.name} 含旧技能路径")
+            self.assertNotIn("skills/" + "ctx" + "ring", text, f"{doc.name} 含旧技能路径")
             for target in LINK_PATTERN.findall(text):
                 if re.match(r"^[a-z]+://", target) or target.startswith("mailto:"):
                     continue

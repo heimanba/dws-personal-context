@@ -23,8 +23,8 @@ from publication_receipt import Receipt, ReceiptError
 
 DEFAULT_DIGEST_ROOT = Path.home() / '.qoder/dws-personal-context/digest'
 DEFAULT_FOLDER_NAME = '日报'
-FOOTER_MARK = '由 ctxring 发布'
-FOOTER = ('\n\n---\n\n> 由 ctxring 发布 · 来源引用已压缩为发布视图，'
+FOOTER_MARK = '完整取证见本地 digest'
+FOOTER = ('\n\n---\n\n> 由 dws-personal-context 发布 · 来源引用已压缩为发布视图，'
           '完整取证见本地 digest：digest/{name} · {verb}：{stamp}\n')
 SNAPSHOT_TOLERANCE = timedelta(seconds=60)
 
@@ -532,7 +532,7 @@ def update(args, digest_root, raw_root):
         content = content if isinstance(content, dict) else {}
         if not (content.get('count') or content.get('matches')):
             return {'ok': False, 'action': 'update', 'nodeId': node,
-                    'problems': [{'code': 'overwrite_requires_ctxring_copy'}]}, 1
+                    'problems': [{'code': 'overwrite_requires_published_copy'}]}, 1
 
     body = _content(report, '更新', stamp)
     command = ['doc', '+checkpoint-update', '--node', node,

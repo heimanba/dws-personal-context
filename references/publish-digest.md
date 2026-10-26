@@ -34,7 +34,7 @@ python3 ~/.qoder/skills/dws-personal-context/scripts/publish_digest.py check ~/.
 
 | 用户给了什么 | 动作 |
 |---|---|
-| 文档 URL / nodeId | `publish_digest.py update <digest> --node <ID或URL> --yes`；overwrite 前脚本先判断是否为 ctxring 发布副本 |
+| 文档 URL / nodeId | `publish_digest.py update <digest> --node <ID或URL> --yes`；overwrite 前脚本先判断是否为已发布副本 |
 | 只有标题 | `dws doc +search --query "<标题>" --page-all --max-pages 20 -f json`；仅当标题完全一致、类型为 adoc、候选唯一时才提议更新；零/多候选停止并展示候选，禁止默认第一项 |
 | 什么都没给 | `publish_digest.py create <digest>`：新建到「我的文档」根目录的固定文件夹 `日报`；标题取 digest 第一个 H1（去掉 `#` 和首尾空白），无 H1 用 `工作日报 · <日期>` |
 | 指定文件夹名 | 新建时按该名称解析固定文件夹：`--folder-name <名称>`，同名唯一则复用，不存在则创建 |
@@ -74,9 +74,9 @@ python3 ~/.qoder/skills/dws-personal-context/scripts/publish_digest.py create <d
 脚本内部固定顺序，不得绕过：
 
 1. 跑「前置条件」的全部预检；有问题退出 1。
-2. 按标题精确搜索 adoc；查重失败、分页不完整、结果结构异常或候选回读失败均按未知停止（`duplicate_check_unknown`），不得视为不存在；全部候选都检查，不截取前十个。若存在同名且含 `由 ctxring 发布` footer 的同 key 文档，停止并输出候选，**不自动覆盖**。`--skip-duplicate-check` 只在用户确认要保留重复文档时用。
+2. 按标题精确搜索 adoc；查重失败、分页不完整、结果结构异常或候选回读失败均按未知停止（`duplicate_check_unknown`），不得视为不存在；全部候选都检查，不截取前十个。若存在同名且含 `完整取证见本地 digest` footer 的同 key 文档，停止并输出候选，**不自动覆盖**。`--skip-duplicate-check` 只在用户确认要保留重复文档时用。
 3. 解析固定文件夹；空 ID、同名歧义、目录不完整都退出 1。dry-run 仅查找，不创建；文件夹缺失时输出建夹及建文档计划，`folder.wouldCreate=true`、`folder.created=false`。
-4. 生成发布视图，追加 footer：`> 由 ctxring 发布 · 来源引用已压缩为发布视图，完整取证见本地 digest：digest/<key>.md · 发布：<时刻>`。
+4. 生成发布视图，追加 footer：`> 由 dws-personal-context 发布 · 来源引用已压缩为发布视图，完整取证见本地 digest：digest/<key>.md · 发布：<时刻>`。
 5. `dws doc +create --name <标题> --folder <nodeId> --content - --format json`。
 6. 正常创建返回 `status=success`、`complete=true`、真实 `nodeId` 且 `data.verified=true` 时通过；否则按返回的真实 ID 用 `+inspect` 和 `+fetch --scope full` 核验全文。CLI 非零退出时也先解析 stdout/stderr JSON 的 `error.details` 或直接操作回执，保留 nodeId、步骤和补偿信息，不能先截断错误再解析。
 7. 全文精确相等，或由 `markdown-it-py` 解析后结构等价，才恢复为成功；忽略源位置、分隔符拼写和松紧列表包装，不删除文本空格，不忽略代码、链接、数字、标题或表格单元格差异。非精确匹配时还核对引用链接定义（包括未使用和重复定义），并拒绝行列不齐的表格，避免解析器丢弃原文后误报等价。格式恢复需要 `markdown-it-py`；依赖缺失、全文不匹配或回读失败均保留部分成功，不降级成仅查 footer。
@@ -95,7 +95,7 @@ python3 ~/.qoder/skills/dws-personal-context/scripts/publish_digest.py update \
 ```
 
 - `--yes` 只有在会话里已确认「更新哪个文档、更新什么内容」后才加；其余情况先 `--dry-run` 展示计划。脚本对 `+checkpoint-update` 固定走「存版本 → 写 → 回读」。
-- 默认只追加。`--mode overwrite` 前脚本先 `doc +fetch --scope keyword --keyword "由 ctxring 发布"`；不是 ctxring 发布副本直接失败（`overwrite_requires_ctxring_copy`），没有绕过开关。用户明确说「覆盖/替换」且目标是副本时才用 overwrite。
+- 默认只追加。`--mode overwrite` 前脚本先 `doc +fetch --scope keyword --keyword "完整取证见本地 digest"`；不是已发布副本直接失败（`overwrite_requires_published_copy`），没有绕过开关。用户明确说「覆盖/替换」且目标是副本时才用 overwrite。
 - `REVISION_CONFLICT`：重新读取当前版本，展示差异；未经用户确认不得改成无 revision 覆盖。
 - `partial_success`：保留已完成步骤，不回放成功步骤；`doc_write_commit_unknown`：先回读确认状态，禁止自动重试创建或追加。
 - 更新回读使用 footer 中唯一的 `更新：<时刻>` 关键字；`+inspect` 确认节点存在、`+fetch` 确认内容命中才返回 `ok=true`。

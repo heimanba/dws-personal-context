@@ -1,6 +1,6 @@
 # 多源采集与更新
 
-需要 Python 3.9 或更新版本和已登录的 `dws`。本文的日期与数据样例均为虚构。采集脚本仅调用钉钉只读接口；写回 digest 是独立的显式动作，见[写回钉钉文档](publish-digest.md)。输出文件原子替换、权限为 `600`。单聊继续由 `chats.py` 处理，其 `ctxring-dialogues` 输出原样保存在 `sources.chat.dataset`，包含续读状态；单聊统一入口为 `export-dialogues.sh`。
+需要 Python 3.9 或更新版本和已登录的 `dws`。本文的日期与数据样例均为虚构。采集脚本仅调用钉钉只读接口；写回 digest 是独立的显式动作，见[写回钉钉文档](publish-digest.md)。输出文件原子替换、权限为 `600`。单聊继续由 `chats.py` 处理，其 `dws-personal-context-dialogues` 输出原样保存在 `sources.chat.dataset`，包含续读状态；单聊统一入口为 `export-dialogues.sh`。
 
 ## 使用
 

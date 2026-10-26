@@ -31,13 +31,24 @@ class DistributionTests(unittest.TestCase):
     def test_noncurrent_dialogue_formats_are_rejected(self):
         for data in ({'meta': {}, 'conversations': []},
                      {'meta': {'format': 'unsupported', 'schemaVersion': 2}, 'conversations': []},
-                     {'meta': {'format': 'ctxring-dialogues', 'schemaVersion': 1}, 'conversations': []},
-                     {'meta': {'format': 'ctxring-dialogues', 'schemaVersion': 2}, 'conversations': []}):
+                     {'meta': {'format': chats.LEGACY_DIALOGUES_FORMAT, 'schemaVersion': 1},
+                      'conversations': []},
+                     {'meta': {'format': chats.DIALOGUES_FORMAT, 'schemaVersion': 2},
+                      'conversations': []}):
             with self.subTest(data=data), self.assertRaises(ValueError):
                 chats.decode_dataset(data)
 
+    def test_legacy_format_still_decodes_for_existing_files(self):
+        data = {'meta': {'format': chats.LEGACY_DIALOGUES_FORMAT, 'schemaVersion': 2,
+                         'coverage': {}, 'state': {'self': {'senderIds': ['self']},
+                         'reads': [], 'emptyConversations': []},
+                         'window': {'start': '2026-10-13 00:00:00',
+                                    'end': '2026-10-14 00:00:00'}},
+                'conversations': [{'cid': 'cidSyntheticExample', 'messages': []}]}
+        chats.decode_dataset(data)
+
     def test_current_header_does_not_admit_noncurrent_conversation_fields(self):
-        data = {'meta': {'format': 'ctxring-dialogues', 'schemaVersion': 2,
+        data = {'meta': {'format': chats.DIALOGUES_FORMAT, 'schemaVersion': 2,
                         'coverage': {}, 'state': {'self': {'senderIds': ['self']},
                         'reads': [], 'emptyConversations': []}},
                 'conversations': [{'cid': 'cidSyntheticExample', 'msgs': []}]}

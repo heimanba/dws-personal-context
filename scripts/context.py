@@ -147,7 +147,7 @@ def main():
             args.mode, args.base = 'update', args.out
         else:
             args.mode = 'collect'
-        print('[ctxring] mode=%s out=%s' % (args.mode, args.out), file=sys.stderr)
+        print('[dws-personal-context] mode=%s out=%s' % (args.mode, args.out), file=sys.stderr)
     elif args.force_full and args.mode == 'update':
         p.error('--force-full only applies to a fresh collect')
     if args.mode == 'update' and not args.base:
@@ -271,7 +271,7 @@ def main():
         coverage = result['coverage']
         chat_meta = result.get('dataset', {}).get('meta', {})
         count = len(result.get('items', [])) if name != 'chat' else chat_meta.get('stats', {}).get('messages', chat_meta.get('messages', 0))
-        print('[ctxring] source=%s items=%d complete=%s elapsed_ms=%d' %
+        print('[dws-personal-context] source=%s items=%d complete=%s elapsed_ms=%d' %
               (name, count, coverage.get('complete') is True, coverage.get('elapsedMs', 0)), file=sys.stderr)
         # Checkpoint each completed source atomically, including partial results.
         save_progress()
@@ -281,7 +281,7 @@ def main():
     stop_reason = ('ok' if file_complete else
                    'retained_sources_incomplete' if selected_complete else 'partial_sources')
     save_progress(file_complete, stop_reason)
-    print('[ctxring] selected_complete=%s complete=%s raw=%s index=%s' %
+    print('[dws-personal-context] selected_complete=%s complete=%s raw=%s index=%s' %
           (selected_complete, file_complete, args.out, index_path(Path(args.out).resolve())))
     return 0 if selected_complete else 2
 
@@ -290,5 +290,5 @@ if __name__ == '__main__':
     try:
         sys.exit(main())
     except (ValueError, KeyError, TypeError, OSError) as exc:
-        print('[ctxring] failed: %s' % exc, file=sys.stderr)
+        print('[dws-personal-context] failed: %s' % exc, file=sys.stderr)
         sys.exit(1)

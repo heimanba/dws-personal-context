@@ -3,7 +3,7 @@
 import re
 from zoneinfo import ZoneInfo
 
-from chats import now, self_ids
+from chats import DIALOGUES_FORMAT, now, self_ids
 from redact import redact_text
 
 ATTACHMENTS = {'图片': 'image', '语音': 'audio', '音频': 'audio', '视频': 'video', '文件': 'file'}
@@ -137,7 +137,7 @@ def export(data, timezone, notes_cids):
     if not coverage['complete']:
         notices.append('单聊全集覆盖未获证明，汇总只能代表本文件包含的消息。')
     stats.update(conversations=len(conversations), messages=sum(len(c['messages']) for c in conversations))
-    result = dict(meta=dict(format='ctxring-dialogues', schemaVersion=2, generatedAt=now(timezone),
+    result = dict(meta=dict(format=DIALOGUES_FORMAT, schemaVersion=2, generatedAt=now(timezone),
                           window=dict(window, timezone=timezone, bounds='[start,end)'),
                           coverage=coverage, stats=stats, redaction='rule_based_credentials_v1',
                           notices=notices), conversations=conversations)
